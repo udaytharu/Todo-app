@@ -13,7 +13,7 @@ app.use(express.json());
 app.use(express.static('public'));
 
 // MongoDB Connection
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/todo-app', {
+mongoose.connect(process.env.MONGODB_URI || 'mongodb+srv://udaytharu813:IM8UqXXccBRGgohf@clustertodo.fqozr8n.mongodb.net/', {
     useNewUrlParser: true,
     useUnifiedTopology: true
 })
