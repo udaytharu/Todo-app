@@ -14,7 +14,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
 // Middleware
 app.use(cors({
-    origin: process.env.NODE_ENV === 'production' ? false : true,
+    origin: process.env.NODE_ENV === 'production' ? process.env.FRONTEND_URL || true : true,
     credentials: true
 }));
 app.use(express.json());
@@ -26,13 +26,14 @@ app.use(session({
     resave: false,
     saveUninitialized: false,
     store: MongoStore.create({
-        mongoUrl: process.env.MONGODB_URI || 'mongodb://localhost:27017/todo-app',
+        mongoUrl: process.env.MONGODB_URI || 'mongodb+srv://udaytharu813:IM8UqXXccBRGgohf@clustertodo.fqozr8n.mongodb.net/',
         ttl: 24 * 60 * 60 // 1 day
     }),
     cookie: {
-        secure: process.env.NODE_ENV === 'production',
+        secure: process.env.NODE_ENV === 'production' && process.env.FRONTEND_URL,
         httpOnly: true,
-        maxAge: 24 * 60 * 60 * 1000 // 1 day
+        maxAge: 24 * 60 * 60 * 1000, // 1 day
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
     }
 }));
 
