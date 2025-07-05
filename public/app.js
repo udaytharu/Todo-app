@@ -2,14 +2,26 @@ class TodoApp {
     constructor() {
         this.todos = [];
         this.currentFilter = 'all';
-        this.apiBaseUrl = '/api/todos';
+        this.apiBaseUrl = '/api';
+        this.token = localStorage.getItem('token');
+        this.user = JSON.parse(localStorage.getItem('user'));
         
         this.initializeElements();
         this.bindEvents();
-        this.loadTodos();
+        this.checkAuthStatus();
     }
 
     initializeElements() {
+        // Auth elements
+        this.authSection = document.getElementById('auth-section');
+        this.todoSection = document.getElementById('todo-section');
+        this.loginForm = document.getElementById('login-form');
+        this.registerForm = document.getElementById('register-form');
+        this.showRegisterLink = document.getElementById('show-register');
+        this.showLoginLink = document.getElementById('show-login');
+        this.logoutBtn = document.getElementById('logout-btn');
+        this.userUsername = document.getElementById('user-username');
+        
         // Form elements
         this.todoForm = document.getElementById('todo-form');
         this.todoInput = document.getElementById('todo-input');
@@ -33,24 +45,180 @@ class TodoApp {
     }
 
     bindEvents() {
-        // Form submission
-        this.todoForm.addEventListener('submit', (e) => this.handleAddTodo(e));
+        // Auth events
+        this.loginForm.addEventListener('submit', (e) => this.handleLogin(e));
+        this.registerForm.addEventListener('submit', (e) => this.handleRegister(e));
+        this.showRegisterLink.addEventListener('click', (e) => this.showRegisterForm(e));
+        this.showLoginLink.addEventListener('click', (e) => this.showLoginForm(e));
+        this.logoutBtn.addEventListener('click', () => this.handleLogout());
         
-        // Filter buttons
+        // Todo events
+        this.todoForm.addEventListener('submit', (e) => this.handleAddTodo(e));
         this.filterBtns.forEach(btn => {
             btn.addEventListener('click', (e) => this.handleFilterChange(e));
         });
-        
-        // Input events
         this.todoInput.addEventListener('input', () => this.handleInputChange());
+    }
+
+    checkAuthStatus() {
+        if (this.token && this.user) {
+            this.showTodoSection();
+            this.loadTodos();
+        } else {
+            this.showAuthSection();
+        }
+    }
+
+    showAuthSection() {
+        this.authSection.classList.remove('hidden');
+        this.todoSection.classList.add('hidden');
+    }
+
+    showTodoSection() {
+        this.authSection.classList.add('hidden');
+        this.todoSection.classList.remove('hidden');
+        this.userUsername.textContent = this.user.username;
+    }
+
+    showLoginForm(e) {
+        e.preventDefault();
+        this.loginForm.classList.remove('hidden');
+        this.registerForm.classList.add('hidden');
+    }
+
+    showRegisterForm(e) {
+        e.preventDefault();
+        this.registerForm.classList.remove('hidden');
+        this.loginForm.classList.add('hidden');
+    }
+
+    async handleLogin(e) {
+        e.preventDefault();
+        
+        const email = document.getElementById('login-email').value;
+        const password = document.getElementById('login-password').value;
+        
+        try {
+            const btn = this.loginForm.querySelector('.auth-btn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Logging in...';
+            
+            const response = await fetch(`${this.apiBaseUrl}/auth/login`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ email, password })
+            });
+            
+            const data = await response.json();
+            
+            if (!response.ok) {
+                throw new Error(data.message || 'Login failed');
+            }
+            
+            this.token = data.token;
+            this.user = data.user;
+            
+            localStorage.setItem('token', this.token);
+            localStorage.setItem('user', JSON.stringify(this.user));
+            
+            this.showTodoSection();
+            this.loadTodos();
+            
+        } catch (error) {
+            console.error('Login error:', error);
+            this.showError(error.message);
+        } finally {
+            const btn = this.loginForm.querySelector('.auth-btn');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login';
+        }
+    }
+
+    async handleRegister(e) {
+        e.preventDefault();
+        
+        const username = document.getElementById('register-username').value;
+        const email = document.getElementById('register-email').value;
+        const password = document.getElementById('register-password').value;
+        
+        try {
+            const btn = this.registerForm.querySelector('.auth-btn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Registering...';
+            
+            const response = await fetch(`${this.apiBaseUrl}/auth/register`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ username, email, password })
+            });
+            
+            const data = await response.json();
+            
+            if (!response.ok) {
+                throw new Error(data.message || 'Registration failed');
+            }
+            
+            this.token = data.token;
+            this.user = data.user;
+            
+            localStorage.setItem('token', this.token);
+            localStorage.setItem('user', JSON.stringify(this.user));
+            
+            this.showTodoSection();
+            this.loadTodos();
+            
+        } catch (error) {
+            console.error('Registration error:', error);
+            this.showError(error.message);
+        } finally {
+            const btn = this.registerForm.querySelector('.auth-btn');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-user-plus"></i> Register';
+        }
+    }
+
+    async handleLogout() {
+        try {
+            await fetch(`${this.apiBaseUrl}/auth/logout`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${this.token}`
+                }
+            });
+        } catch (error) {
+            console.error('Logout error:', error);
+        } finally {
+            this.token = null;
+            this.user = null;
+            this.todos = [];
+            
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            
+            this.showAuthSection();
+            this.loginForm.reset();
+            this.registerForm.reset();
+        }
     }
 
     async loadTodos() {
         try {
             this.showLoading(true);
-            const response = await fetch(this.apiBaseUrl);
+            const response = await fetch(`${this.apiBaseUrl}/todos`, {
+                headers: {
+                    'Authorization': `Bearer ${this.token}`
+                }
+            });
             
             if (!response.ok) {
+                if (response.status === 401) {
+                    this.handleLogout();
+                    return;
+                }
                 throw new Error('Failed to load todos');
             }
             
@@ -75,15 +243,20 @@ class TodoApp {
             this.addBtn.disabled = true;
             this.addBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
             
-            const response = await fetch(this.apiBaseUrl, {
+            const response = await fetch(`${this.apiBaseUrl}/todos`, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${this.token}`
                 },
                 body: JSON.stringify({ text })
             });
             
             if (!response.ok) {
+                if (response.status === 401) {
+                    this.handleLogout();
+                    return;
+                }
                 throw new Error('Failed to add todo');
             }
             
@@ -110,15 +283,20 @@ class TodoApp {
         if (!todo) return;
         
         try {
-            const response = await fetch(`${this.apiBaseUrl}/${todoId}`, {
+            const response = await fetch(`${this.apiBaseUrl}/todos/${todoId}`, {
                 method: 'PUT',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${this.token}`
                 },
                 body: JSON.stringify({ completed: !todo.completed })
             });
             
             if (!response.ok) {
+                if (response.status === 401) {
+                    this.handleLogout();
+                    return;
+                }
                 throw new Error('Failed to update todo');
             }
             
@@ -139,15 +317,20 @@ class TodoApp {
         if (!newText.trim()) return;
         
         try {
-            const response = await fetch(`${this.apiBaseUrl}/${todoId}`, {
+            const response = await fetch(`${this.apiBaseUrl}/todos/${todoId}`, {
                 method: 'PUT',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${this.token}`
                 },
                 body: JSON.stringify({ text: newText.trim() })
             });
             
             if (!response.ok) {
+                if (response.status === 401) {
+                    this.handleLogout();
+                    return;
+                }
                 throw new Error('Failed to update todo');
             }
             
@@ -167,11 +350,18 @@ class TodoApp {
         if (!confirm('Are you sure you want to delete this todo?')) return;
         
         try {
-            const response = await fetch(`${this.apiBaseUrl}/${todoId}`, {
-                method: 'DELETE'
+            const response = await fetch(`${this.apiBaseUrl}/todos/${todoId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${this.token}`
+                }
             });
             
             if (!response.ok) {
+                if (response.status === 401) {
+                    this.handleLogout();
+                    return;
+                }
                 throw new Error('Failed to delete todo');
             }
             

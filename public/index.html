@@ -9,62 +9,119 @@
 </head>
 <body>
     <div class="container">
-        <header>
-            <h1><i class="fas fa-check-circle"></i> Todo App</h1>
-            <p>Organize your tasks efficiently</p>
-        </header>
-
-        <div class="todo-input-section">
-            <form id="todo-form">
-                <div class="input-group">
-                    <input 
-                        type="text" 
-                        id="todo-input" 
-                        placeholder="What needs to be done?"
-                        maxlength="100"
-                        required
-                    >
-                    <button type="submit" id="add-btn">
-                        <i class="fas fa-plus"></i>
-                    </button>
+        <!-- Auth Section -->
+        <div id="auth-section" class="auth-section">
+            <div class="auth-container">
+                <div class="auth-header">
+                    <h1><i class="fas fa-check-circle"></i> Todo App</h1>
+                    <p>Sign in to manage your todos</p>
                 </div>
-            </form>
-        </div>
 
-        <div class="todo-stats">
-            <div class="stat">
-                <span id="total-todos">0</span>
-                <label>Total</label>
+                <!-- Login Form -->
+                <form id="login-form" class="auth-form">
+                    <h2>Login</h2>
+                    <div class="form-group">
+                        <input type="email" id="login-email" placeholder="Email" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="password" id="login-password" placeholder="Password" required>
+                    </div>
+                    <button type="submit" class="auth-btn">
+                        <i class="fas fa-sign-in-alt"></i> Login
+                    </button>
+                    <p class="auth-switch">
+                        Don't have an account? 
+                        <a href="#" id="show-register">Register here</a>
+                    </p>
+                </form>
+
+                <!-- Register Form -->
+                <form id="register-form" class="auth-form hidden">
+                    <h2>Register</h2>
+                    <div class="form-group">
+                        <input type="text" id="register-username" placeholder="Username" required minlength="3" maxlength="20">
+                    </div>
+                    <div class="form-group">
+                        <input type="email" id="register-email" placeholder="Email" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="password" id="register-password" placeholder="Password" required minlength="6">
+                    </div>
+                    <button type="submit" class="auth-btn">
+                        <i class="fas fa-user-plus"></i> Register
+                    </button>
+                    <p class="auth-switch">
+                        Already have an account? 
+                        <a href="#" id="show-login">Login here</a>
+                    </p>
+                </form>
             </div>
-            <div class="stat">
-                <span id="completed-todos">0</span>
-                <label>Completed</label>
+        </div>
+
+        <!-- Todo Section -->
+        <div id="todo-section" class="todo-section hidden">
+            <header>
+                <div class="header-content">
+                    <h1><i class="fas fa-check-circle"></i> Todo App</h1>
+                    <p>Welcome, <span id="user-username"></span>!</p>
+                </div>
+                <button id="logout-btn" class="logout-btn" title="Logout">
+                    <i class="fas fa-sign-out-alt"></i>
+                </button>
+            </header>
+
+            <div class="todo-input-section">
+                <form id="todo-form">
+                    <div class="input-group">
+                        <input 
+                            type="text" 
+                            id="todo-input" 
+                            placeholder="What needs to be done?"
+                            maxlength="100"
+                            required
+                        >
+                        <button type="submit" id="add-btn">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+                </form>
             </div>
-            <div class="stat">
-                <span id="pending-todos">0</span>
-                <label>Pending</label>
+
+            <div class="todo-stats">
+                <div class="stat">
+                    <span id="total-todos">0</span>
+                    <label>Total</label>
+                </div>
+                <div class="stat">
+                    <span id="completed-todos">0</span>
+                    <label>Completed</label>
+                </div>
+                <div class="stat">
+                    <span id="pending-todos">0</span>
+                    <label>Pending</label>
+                </div>
             </div>
-        </div>
 
-        <div class="todo-filters">
-            <button class="filter-btn active" data-filter="all">All</button>
-            <button class="filter-btn" data-filter="pending">Pending</button>
-            <button class="filter-btn" data-filter="completed">Completed</button>
-        </div>
+            <div class="todo-filters">
+                <button class="filter-btn active" data-filter="all">All</button>
+                <button class="filter-btn" data-filter="pending">Pending</button>
+                <button class="filter-btn" data-filter="completed">Completed</button>
+            </div>
 
-        <div class="todo-list" id="todo-list">
-            <!-- Todos will be dynamically added here -->
-        </div>
+            <div class="todo-list" id="todo-list">
+                <!-- Todos will be dynamically added here -->
+            </div>
 
-        <div class="empty-state" id="empty-state">
-            <i class="fas fa-clipboard-list"></i>
-            <h3>No todos yet</h3>
-            <p>Add your first todo to get started!</p>
-        </div>
+            <div class="empty-state" id="empty-state">
+                <i class="fas fa-clipboard-list"></i>
+                <h3>No todos yet</h3>
+                <p>Add your first todo to get started!</p>
+            </div>
 
-        <div class="loading" id="loading">
-            <i class="fas fa-spinner fa-spin"></i>
-            <p>Loading todos...</p>
+            <div class="loading" id="loading">
+                <i class="fas fa-spinner fa-spin"></i>
+                <p>Loading todos...</p>
+            </div>
         </div>
     </div>
 
